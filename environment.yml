@@ -1,0 +1,39 @@
+# run: conda env create -f environment.yml
+# run: conda activate smartl
+
+name: smartl
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - tensorflow
+  - scikit-image
+  - scikit-learn
+  - pandas
+  - opencv
+  - jupyterlab
+  - matplotlib
+  - pytorch
+  - pip
+  - git
+  - torchvision
+  # ./pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez
+  # - pip:
+  #   - pybluez
+prefix: /Applications/anaconda3/envs/smartl
+
+# for etienne
+# conda remove gdal
+# conda remove geopandas
+# conda remove exifread
+# conda remove segment-anything
+
+# for everyone
+# conda install -c conda-forge ultralytics 
+# ./pip install mediapipe
+# ./pip install timm
+
+
+
+
