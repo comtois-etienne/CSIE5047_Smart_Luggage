@@ -2,7 +2,7 @@ from src.point import Point
 import numpy as np
 import math
 
-follow_distance = 1200
+follow_distance = 1000
 sharp_distance = 600
 follow_angle = 30
 
@@ -101,7 +101,7 @@ class Vehicule:
         return False
     
     def plot(self, ax):
-        self.front.scatter(ax, color='c', size=20, label='front')
+        self.front.scatter(ax, color='g', size=20, label='front')
         self.rear.scatter(ax, color='r', size=20, label='rear')
         fov = self.front.copy()
         fov.a = np.rad2deg(self.north_angle)

@@ -10,6 +10,11 @@ EAST = 90
 SOUTH = 180
 WEST = -90
 
+
+def normalize_angle(angle):
+    return (angle + 180) % 360 - 180
+
+
 @dataclass
 class Point:
     x: int = 0
@@ -147,15 +152,18 @@ class Point:
         ax.plot([self.y, pt_l.y], [self.x, pt_l.x], color=color, linestyle=linestyle, label=label)
         ax.plot([self.y, pt_r.y], [self.x, pt_r.x], color=color, linestyle=linestyle)
 
-    def is_visible(self, viewer, fov=60):
-        angle_to_point = viewer.angle(self)
+    def is_visible(self, viewer, fov=60, verbose=False):
+        angle_to_point = normalize_angle(viewer.angle(self))
         hfov = fov / 2
-        lower_bound = (viewer.a - hfov) % 360
-        upper_bound = (viewer.a + hfov) % 360
-        if lower_bound < upper_bound:
-            return lower_bound <= angle_to_point <= upper_bound
-        else:
-            return angle_to_point >= lower_bound or angle_to_point <= upper_bound
+        lower_bound = normalize_angle(viewer.a - hfov)
+        upper_bound = normalize_angle(viewer.a + hfov)
+
+        if verbose:
+            print(lower_bound, upper_bound, angle_to_point)
+
+        if lower_bound > upper_bound:
+            return angle_to_point > lower_bound or angle_to_point < upper_bound
+        return lower_bound < angle_to_point and angle_to_point < upper_bound
 
     @staticmethod
     def origin():
