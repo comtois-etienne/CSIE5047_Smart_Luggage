@@ -6,6 +6,7 @@ import math
 follow_distance = 1000
 sharp_distance = 600
 follow_angle = 30
+fov_reduction = 10
 
 
 class Vehicle:
@@ -56,6 +57,9 @@ class Vehicle:
     
     def distance_to_point(self, point):
         return self.front.distance(point)
+    
+    def sees(self, point):
+        return point.is_visible(self.get_front(), fov=self.fov - fov_reduction)
 
     def update_axle_positions(self):
         half_axle_length = self.axle_len / 2
@@ -96,28 +100,41 @@ class Vehicle:
     def get_positions(self):
         return self.rear, self.front, self.center, self.north_angle
     
-    def can_move(self, last_seen, new_seen):
+    def can_move(self, last_seen, has_seen=True):
         angle = self.angle_to_point(last_seen)
         distance = self.distance_to_point(last_seen)
 
         # modify the distance according to the spline ?
         if distance > follow_distance:
             return True
-        if (distance > sharp_distance and (abs(angle) > follow_angle or new_seen is None)) :
+        if (distance > sharp_distance and (abs(angle) > follow_angle or not has_seen)) :
             return True
         return False
-        
-    def look_around(self, speed):
+
+    def look_around(self, speed=None, time=1):
+        if speed is None:
+            speed = self.max_speed
         if self.get_wheel_angle() >= 0:
             self.set_wheel_right()
         else:
             self.set_wheel_left()
         self.set_speed(speed)
+        self.update_position(time)
+
+    def follow_target(self, target, speed_ratio=0.25, time=1, has_seen=True):
+        if self.can_move(target, target):
+            self.set_speed(self.distance_to_point(target) * speed_ratio)
+            self.set_wheel_angle(self.angle_to_point(target))
+        else:
+            self.stop()
+        self.update_position(time)
+        return self.has_stopped()
     
     def plot(self, ax):
-        self.front.scatter(ax, color='g', size=20, label='front')
-        self.rear.scatter(ax, color='r', size=20, label='rear')
+        self.front.scatter(ax, color='b', size=20, label='front')
+        self.rear.scatter(ax, color='c', size=20, label='rear')
+        ax.plot([self.rear.y, self.front.y], [self.rear.x, self.front.x], color='c')
         fov = self.front.copy()
         fov.a = np.rad2deg(self.north_angle)
-        fov.plot(ax, color='y', fov=self.fov, fov_len=20000, linestyle='--', label='fov')
+        fov.plot(ax, color='y', fov=self.fov - fov_reduction, fov_len=20000, linestyle='--', label='fov')
 
