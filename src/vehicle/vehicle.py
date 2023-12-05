@@ -137,4 +137,4 @@ class Vehicle:
         fov = self.front.copy()
         fov.a = np.rad2deg(self.north_angle)
         fov.plot(ax, color='y', fov=self.fov - fov_reduction, fov_len=20000, linestyle='--', label='fov')
-
+        ax.text(self.rear.y, self.rear.x, f'a: {self.get_wheel_angle():.2f}°\ns: {self.speed:.2f}mm/s', fontsize=12)
