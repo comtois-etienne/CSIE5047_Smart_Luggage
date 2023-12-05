@@ -18,7 +18,7 @@ class Vehicule:
         self.north_angle = 0  # Radians
         self.fov = camera.h_fov
 
-        self.center = center - Point(0, self.axle_len / 2, 0)
+        self.center = center - Point(self.axle_len / 2, 0, 0)
         self.update_axle_positions()
 
     def set_speed(self, speed):
@@ -37,6 +37,19 @@ class Vehicule:
         self.set_speed(0)
         self.set_wheel_angle(0)
 
+    def get_front(self):
+        front = self.front.copy()
+        front.a = np.degrees(self.north_angle)
+        return front
+    
+    def angle_to_point(self, point):
+        camera = self.get_front()
+        angle = camera.direction(point)
+        return angle
+    
+    def distance_to_point(self, point):
+        return self.front.distance(point)
+
     def update_axle_positions(self):
         half_axle_length = self.axle_len / 2
         self.front = Point(self.center.x + half_axle_length * math.cos(self.north_angle),
@@ -48,6 +61,7 @@ class Vehicule:
         return pivot.rotates(angle, point)
 
     def update_position(self, time):
+        old_front = self.get_front()
         # Calculate the new front wheel position
         if self.wheel_angle != 0:
             turn_radius = self.axle_len / np.tan(self.wheel_angle)
@@ -69,21 +83,11 @@ class Vehicule:
         self.front.x = self.center.x + (self.axle_len / 2) * math.cos(self.north_angle)
         self.front.y = self.center.y + (self.axle_len / 2) * math.sin(self.north_angle)
 
+        new_front = self.get_front()
+        return new_front - old_front
+
     def get_positions(self):
         return self.rear, self.front, self.center, self.north_angle
-    
-    def get_front(self):
-        front = self.front.copy()
-        front.a = np.degrees(self.north_angle)
-        return front
-    
-    def angle_to_point(self, point):
-        camera = self.get_front()
-        angle = camera.direction(point)
-        return angle
-    
-    def distance_to_point(self, point):
-        return self.front.distance(point)
     
     def can_move(self, last_seen, new_seen):
         angle = self.angle_to_point(last_seen)
@@ -95,4 +99,11 @@ class Vehicule:
         if (distance > sharp_distance and (abs(angle) > follow_angle or new_seen is None)) :
             return True
         return False
+    
+    def plot(self, ax):
+        self.front.scatter(ax, color='c', size=20, label='front')
+        self.rear.scatter(ax, color='r', size=20, label='rear')
+        fov = self.front.copy()
+        fov.a = np.rad2deg(self.north_angle)
+        fov.plot(ax, color='y', fov=self.fov, fov_len=20000, linestyle='--', label='fov')
 
