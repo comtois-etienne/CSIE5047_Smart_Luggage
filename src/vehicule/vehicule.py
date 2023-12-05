@@ -1,4 +1,4 @@
-from src.point import Point
+from src.point import Point, normalize_angle
 import numpy as np
 import math
 
@@ -27,6 +27,9 @@ class Vehicule:
     def set_wheel_angle(self, angle):
         self.wheel_angle = np.radians(max(min(angle, np.degrees(self.max_turn_angle)), -np.degrees(self.max_turn_angle)))
 
+    def get_wheel_angle(self):
+        return normalize_angle(np.degrees(self.wheel_angle))
+
     def set_wheel_left(self):
         self.set_wheel_angle(- np.degrees(self.max_turn_angle))
 
@@ -36,6 +39,9 @@ class Vehicule:
     def stop(self):
         self.set_speed(0)
         self.set_wheel_angle(0)
+
+    def has_stopped(self):
+        return self.speed == 0
 
     def get_front(self):
         front = self.front.copy()
@@ -99,6 +105,13 @@ class Vehicule:
         if (distance > sharp_distance and (abs(angle) > follow_angle or new_seen is None)) :
             return True
         return False
+        
+    def look_around(self, speed):
+        if self.get_wheel_angle() >= 0:
+            self.set_wheel_right()
+        else:
+            self.set_wheel_left()
+        self.set_speed(speed)
     
     def plot(self, ax):
         self.front.scatter(ax, color='g', size=20, label='front')
