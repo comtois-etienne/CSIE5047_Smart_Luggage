@@ -8,7 +8,7 @@ follow_angle = 30
 
 
 class Vehicule:
-    def __init__(self, max_turn_angle, axle_len, max_speed, fov=90, center=Point(0,0,0)):
+    def __init__(self, max_turn_angle, axle_len, max_speed, camera, center=Point(0,0,0)):
         self.max_turn_angle = np.radians(max_turn_angle)
         self.axle_len = axle_len
         self.max_speed = max_speed
@@ -16,7 +16,7 @@ class Vehicule:
         self.speed = 0
         self.wheel_angle = 0  # Radians
         self.north_angle = 0  # Radians
-        self.fov = fov
+        self.fov = camera.h_fov
 
         self.center = center - Point(0, self.axle_len / 2, 0)
         self.update_axle_positions()
