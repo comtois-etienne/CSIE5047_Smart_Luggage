@@ -5,7 +5,6 @@ import math
 
 follow_distance = 1000
 sharp_distance = 600
-follow_angle = 30
 fov_reduction = 10
 
 
@@ -107,7 +106,7 @@ class Vehicle:
         # modify the distance according to the spline ?
         if distance > follow_distance:
             return True
-        if (distance > sharp_distance and (abs(angle) > follow_angle or not has_seen)) :
+        if (distance > sharp_distance and (abs(angle) > self.fov // 4 or not has_seen)) :
             return True
         return False
 
