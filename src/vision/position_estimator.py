@@ -1,5 +1,6 @@
 from src.point import Point
 from .camera import Camera
+import matplotlib.pyplot as plt
 import mediapipe as mp
 import numpy as np
 import queue
@@ -28,6 +29,19 @@ def _get_torso_properties(mp_pose, results, frame):
     shoulder_pixel_width = left_shoulder_point.distance(right_shoulder_point)
 
     return torso_pixel_height, shoulder_pixel_width, shoulder_point, hip_point
+
+
+def _unwrap_result(result):
+    return result['pose'], result['point'], result['distance'], result['angle']
+
+
+def _wrap_result(result):
+    return {
+        'pose': result[0],
+        'point': result[1],
+        'distance': result[2],
+        'angle': result[3]
+    }
 
 
 class PositionEstimator:
@@ -79,39 +93,61 @@ class PositionEstimator:
                 self.mp_pose.POSE_CONNECTIONS
             )
 
+    @staticmethod
+    def wrap_result(pose, point, distance, angle):
+        return _wrap_result((pose, point, distance, angle))
+
+    @staticmethod
+    def unwrap_result(result):
+        return _unwrap_result(result)
+    
+    @staticmethod
+    def plot_result(frame, result, camera=None):
+        pose, point, distance, angle = _unwrap_result(result)
+
+        fig, ax = plt.subplots()
+        ax.imshow(frame)
+        if pose.pose_landmarks is not None:
+            if camera is not None:
+                pixel_angle = camera.angle_to_pixel(angle)
+                ax.plot([pixel_angle, pixel_angle], [0, frame.shape[0]], color='c', linewidth=2)
+            ax.text(pixel_angle, 0, f'{angle:.1f} deg', color='k', fontsize=12)
+            ax.text(pixel_angle, 40, f'{distance} mm', color='k', fontsize=12)
+            ax.text(0, 0, f'x: {point.x}', color='k', fontsize=12)
+            ax.text(0, 40, f'y: {point.y}', color='k', fontsize=12)
+        plt.axis('off')
+        plt.show()
+
     def get_position(self, image, adjustment_ratio=1.0, verbose=False):
         pose_results = self.pose.process(image)
+        if pose_results.pose_landmarks is None: return None
+        self._verbose(verbose, image, pose_results)
 
-        if pose_results.pose_landmarks is not None:
-            self._verbose(verbose, image, pose_results)
+        res = _get_torso_properties(self.mp_pose, pose_results, image)
+        torso_pixel_height, shoulder_pixel_width, shoulder_point, hip_point = res
+        middle_point = shoulder_point.middle(hip_point)
 
-            res = _get_torso_properties(self.mp_pose, pose_results, image)
-            torso_pixel_height, shoulder_pixel_width, shoulder_point, hip_point = res
-            middle_point = shoulder_point.middle(hip_point)
+        distance, angle = self.camera.get_distance_angle(self.obj_height, torso_pixel_height, middle_point.x)
+        distance = int(distance)
 
-            distance, angle = self.camera.get_distance_angle(self.obj_height, torso_pixel_height, middle_point.x)
-            distance = int(distance)
+        self._add_distance(distance)
+        distance = self._get_distance(self._get_kernel_distance)
 
-            self._add_distance(distance)
-            distance = self._get_distance(self._get_kernel_distance)
+        angle = round(angle, 1)
+        distance = int(distance // 10 * 10)
+        x, y = Camera.distance_angle_to_coordinates(distance, angle)
+        point = Point(x, y) * adjustment_ratio
+        point = point.round(10)
 
-            angle = round(angle, 1)
-            distance = int(distance // 10 * 10)
-            x, y = Camera.distance_angle_to_coordinates(distance, angle)
-            point = Point(x, y) * adjustment_ratio
-            point = point.round(10)
-            return pose_results, point, distance, angle
-        
-        else:
-            return None, None, None, None
+        return self.wrap_result(pose_results, point, distance, angle)
 
     def save_position(self, image, file_path, adjustment_ratio=1.0, verbose=False):
-        pose_results, point, distance, angle = self.get_position(image, adjustment_ratio, verbose)
-        if pose_results is not None:
-            timestamp = round(time.time(), 3)
-            with open(file_path, 'a') as f:
-                f.write(f'{timestamp},{point.x},{point.y},{distance},{angle}\n')
-            return pose_results, point, distance, angle
-        else:
-            return None, None, None, None
+        result = self.get_position(image, adjustment_ratio, verbose)
+        if result is None: return None
+        pose, point, distance, angle = self.unwrap_result(result)
+        timestamp = round(time.time(), 3)
+        with open(file_path, 'a') as f:
+            f.write(f'{timestamp},{point.x},{point.y},{distance},{angle}\n')
+        return result
+
 
