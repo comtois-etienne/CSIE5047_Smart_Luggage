@@ -2,12 +2,13 @@ from src.point import Point, normalize_angle
 import numpy as np
 import math
 
+
 follow_distance = 1000
 sharp_distance = 600
 follow_angle = 30
 
 
-class Vehicule:
+class Vehicle:
     def __init__(self, max_turn_angle, axle_len, max_speed, camera, center=Point(0,0,0)):
         self.max_turn_angle = np.radians(max_turn_angle)
         self.axle_len = axle_len
