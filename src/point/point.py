@@ -30,11 +30,17 @@ class Point:
     def __add__(self, other):
         x = self.x + other.x
         y = self.y + other.y
+        if self.a is not None and other.a is not None:
+            a = (self.a + other.a) % 360
+            return Point(x, y, a)
         return Point(x, y)
     
     def __sub__(self, other):
         x = self.x - other.x
         y = self.y - other.y
+        if self.a is not None and other.a is not None:
+            a = (self.a - other.a) % 360
+            return Point(x, y, a)
         return Point(x, y)
     
     def __mul__(self, other):
