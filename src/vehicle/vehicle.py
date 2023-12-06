@@ -4,8 +4,8 @@ import numpy as np
 import math
 
 
-follow_distance = 1000
-sharp_distance = 600
+follow_distance = 1200
+sharp_distance = 800
 fov_reduction = 10
 
 
@@ -14,6 +14,8 @@ class Vehicle:
         self.max_turn_angle = np.radians(max_turn_angle)
         self.axle_len = axle_len
         self.max_speed = max_speed
+
+        self.lost_time = 0
 
         self.speed = 0
         self.wheel_angle = 0  # Radians
@@ -44,7 +46,6 @@ class Vehicle:
 
     def stop(self):
         self.set_speed(0)
-        self.set_wheel_angle(0)
 
     def has_stopped(self):
         return self.speed == 0
@@ -58,6 +59,9 @@ class Vehicle:
         camera = self.get_front()
         angle = camera.direction(point)
         return angle
+    
+    def vehicle_angle(self):
+        return na(self.rear.angle(self.front))
     
     def distance_to_point(self, point):
         return self.front.distance(point)
@@ -74,7 +78,7 @@ class Vehicle:
 
     def recenter(self):
         self.north_angle = 0
-        self.center = Point(self.axle_len / 2, 0, 0)
+        self.center = Point(- self.axle_len / 2, 0, 0)
         self.update_axle_positions()
 
     def rotate_point_around_pivot(self, point, pivot, angle):
@@ -109,29 +113,46 @@ class Vehicle:
     def get_positions(self):
         return self.rear, self.front, self.center, self.north_angle
     
-    def can_move(self, last_seen, has_seen=True):
+    def can_move(self, last_seen):
         angle = self.angle_to_point(last_seen)
         distance = self.distance_to_point(last_seen)
 
         # modify the distance according to the spline ?
+        if self.lost_time > 2:
+            return True
         if distance > follow_distance:
             return True
-        if (distance > sharp_distance and (abs(angle) > self.fov // 4 or not has_seen)) :
+        if (distance > sharp_distance and (abs(angle) > self.fov // 4)) :
             return True
         return False
 
-    def look_around(self, target, speed=None):
+    def look_around(self, target=None, speed=None):
         if speed is None:
-            speed = self.max_speed
+            speed = self.max_speed // 4
 
-        angle = self.angle_to_point(target)
+        angle = self.get_wheel_angle() if target is None else self.angle_to_point(target)
         self.set_wheel_right() if angle >= 0 else self.set_wheel_left()
         self.set_speed(speed)
 
-    def follow_target(self, target, speed_ratio=0.25, time=1, has_seen=True):
-        if self.can_move(target, target):
-            self.set_speed(self.distance_to_point(target) * speed_ratio)
+    def follow_target(self, target, host, time=1, has_seen=True, speed_ratio=0.25):
+        self.lost_time = 0 if has_seen else self.lost_time + 1
+        # if self.lost_time > 5 and target == host:
+            # self.look_around()
+        if self.can_move(host):
+            target = target + Point(self.axle_len * 2, 0, 0)
+            # todo account for the host angle
+            self.set_speed(self.distance_to_point(host) * speed_ratio)
             self.set_wheel_angle(self.angle_to_point(target))
+        else:
+            self.stop()
+        self.update_position(time)
+        return self.has_stopped()
+    
+    def follow_host(self, host, time=1, has_seen=True, speed_ratio=0.25):
+        self.lost_time = 0 if has_seen else self.lost_time + 1
+        if self.can_move(host):
+            self.set_speed(self.distance_to_point(host) * speed_ratio)
+            self.set_wheel_angle(self.angle_to_point(host))
         else:
             self.stop()
         self.update_position(time)
