@@ -1,4 +1,5 @@
-from src.point import Point, normalize_angle
+from src.point import Point
+from src.point import normalize_angle as na
 import numpy as np
 import math
 
@@ -19,6 +20,7 @@ class Vehicle:
         self.north_angle = 0  # Radians
         self.fov = camera.h_fov
 
+        self.last_movement = Point(0, 0, 0)
         self.center = center - Point(self.axle_len / 2, 0, 0)
         self.update_axle_positions()
 
@@ -28,14 +30,17 @@ class Vehicle:
     def set_wheel_angle(self, angle):
         self.wheel_angle = np.radians(max(min(angle, np.degrees(self.max_turn_angle)), -np.degrees(self.max_turn_angle)))
 
+    def is_max_turn_angle(self):
+        return abs(np.degrees(self.wheel_angle)) == abs(np.degrees(self.max_turn_angle))
+
     def get_wheel_angle(self):
-        return normalize_angle(np.degrees(self.wheel_angle))
+        return na(np.degrees(self.wheel_angle))
 
     def set_wheel_left(self):
-        self.set_wheel_angle(- np.degrees(self.max_turn_angle))
+        self.set_wheel_angle(- na(np.degrees(self.max_turn_angle)))
 
     def set_wheel_right(self):
-        self.set_wheel_angle(np.degrees(self.max_turn_angle))
+        self.set_wheel_angle(na(np.degrees(self.max_turn_angle)))
 
     def stop(self):
         self.set_speed(0)
@@ -67,6 +72,11 @@ class Vehicle:
         self.rear = Point(self.center.x - half_axle_length * math.cos(self.north_angle),
                           self.center.y - half_axle_length * math.sin(self.north_angle))
 
+    def recenter(self):
+        self.north_angle = 0
+        self.center = Point(self.axle_len / 2, 0, 0)
+        self.update_axle_positions()
+
     def rotate_point_around_pivot(self, point, pivot, angle):
         return pivot.rotates(angle, point)
 
@@ -94,7 +104,7 @@ class Vehicle:
         self.front.y = self.center.y + (self.axle_len / 2) * math.sin(self.north_angle)
 
         new_front = self.get_front()
-        return new_front - old_front
+        self.last_movement = new_front - old_front
 
     def get_positions(self):
         return self.rear, self.front, self.center, self.north_angle
@@ -110,15 +120,13 @@ class Vehicle:
             return True
         return False
 
-    def look_around(self, speed=None, time=1):
+    def look_around(self, target, speed=None):
         if speed is None:
             speed = self.max_speed
-        if self.get_wheel_angle() >= 0:
-            self.set_wheel_right()
-        else:
-            self.set_wheel_left()
+
+        angle = self.angle_to_point(target)
+        self.set_wheel_right() if angle >= 0 else self.set_wheel_left()
         self.set_speed(speed)
-        self.update_position(time)
 
     def follow_target(self, target, speed_ratio=0.25, time=1, has_seen=True):
         if self.can_move(target, target):
@@ -128,7 +136,7 @@ class Vehicle:
             self.stop()
         self.update_position(time)
         return self.has_stopped()
-    
+
     def plot(self, ax):
         self.front.scatter(ax, color='b', size=20, label='front')
         self.rear.scatter(ax, color='c', size=20, label='rear')
@@ -137,3 +145,4 @@ class Vehicle:
         fov.a = np.rad2deg(self.north_angle)
         fov.plot(ax, color='y', fov=self.fov - fov_reduction, fov_len=20000, linestyle='--', label='fov')
         ax.text(self.rear.y, self.rear.x, f'a: {self.get_wheel_angle():.2f}°\ns: {self.speed:.2f}mm/s', fontsize=12)
+

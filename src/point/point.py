@@ -36,7 +36,7 @@ class Point:
         x = self.x + other.x
         y = self.y + other.y
         if self.a is not None and other.a is not None:
-            a = (self.a + other.a) % 360
+            a = normalize_angle(self.a + other.a)
             return Point(x, y, a)
         return Point(x, y)
     
@@ -44,7 +44,7 @@ class Point:
         x = self.x - other.x
         y = self.y - other.y
         if self.a is not None and other.a is not None:
-            a = (self.a - other.a) % 360
+            a = normalize_angle(self.a - other.a)
             return Point(x, y, a)
         return Point(x, y)
     
@@ -130,8 +130,8 @@ class Point:
         angle = np.radians(angle)
         rot = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
         others.x, others.y = np.dot(others[['x', 'y']], rot).T
-        if recenter:
-            others += self
+        # if recenter:
+        #     others += self
         return others
     
     def to_df(self):
