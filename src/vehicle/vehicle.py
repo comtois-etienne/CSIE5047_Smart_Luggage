@@ -16,6 +16,7 @@ class Vehicle:
         self.max_speed = max_speed
 
         self.lost_time = 0
+        self.is_sharp_turn = False
 
         self.speed = 0
         self.wheel_angle = 0  # Radians
@@ -27,7 +28,8 @@ class Vehicle:
         self.update_axle_positions()
 
     def set_speed(self, speed):
-        self.speed = min(speed, self.max_speed)
+        sign = 1 if speed >= 0 else -1
+        self.speed = min(abs(speed), self.max_speed) * sign
 
     def set_wheel_angle(self, angle):
         self.wheel_angle = np.radians(max(min(angle, np.degrees(self.max_turn_angle)), -np.degrees(self.max_turn_angle)))
@@ -134,17 +136,34 @@ class Vehicle:
         self.set_wheel_right() if angle >= 0 else self.set_wheel_left()
         self.set_speed(speed)
 
+    def sharp_turn(self, angle, speed):
+        if not self.is_sharp_turn:
+            self.set_wheel_left() if angle >= 0 else self.set_wheel_right()
+            self.set_speed(-speed)
+        self.is_sharp_turn = True
+        # turn half of the angle by going backward
+
+    #todo
+    def turn_on_itself(self, angle, speed):
+        pass
+
     def follow_target(self, target, host, time=1, has_seen=True, speed_ratio=0.25):
         self.lost_time = 0 if has_seen else self.lost_time + 1
+        angle = self.angle_to_point(target)
+        print(angle)
+        can_move = self.can_move(host)
         # if self.lost_time > 5 and target == host:
             # self.look_around()
-        if self.can_move(host):
-            target = target + Point(self.axle_len * 2, 0, 0)
-            # todo account for the host angle
-            self.set_speed(self.distance_to_point(host) * speed_ratio)
-            self.set_wheel_angle(self.angle_to_point(target))
-        else:
+        if not can_move:
             self.stop()
+        elif (abs(angle) > self.max_turn_angle and self.lost_time > 4) or self.lost_time > 4:
+            self.sharp_turn(angle, self.max_speed // 8)
+        else:
+            target = target + Point(self.axle_len * 2, 0, 0)
+            # todo account for the host angle for distance
+            self.set_speed(self.distance_to_point(host) * speed_ratio)
+            self.set_wheel_angle(angle)
+
         self.update_position(time)
         return self.has_stopped()
     

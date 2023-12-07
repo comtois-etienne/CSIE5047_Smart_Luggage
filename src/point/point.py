@@ -63,6 +63,9 @@ class Point:
         y = np.sqrt(self.y)
         return Point(x, y)
     
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+    
     def euclidean_distance(self, other, astype=int):
         dt = self - other
         dt = dt ** 2
@@ -130,8 +133,9 @@ class Point:
         angle = np.radians(angle)
         rot = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
         others.x, others.y = np.dot(others[['x', 'y']], rot).T
-        # if recenter:
-        #     others += self
+        if recenter:
+            others.x -= self.x
+            others.y -= self.y
         return others
     
     def to_df(self):
