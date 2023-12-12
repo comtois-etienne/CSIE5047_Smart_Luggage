@@ -94,6 +94,15 @@ class PositionEstimator:
             )
 
     @staticmethod
+    def mask_frame(frame, box):
+        frame = frame.copy()
+        frame[:box['ymin'], :] = 0
+        frame[box['ymax']:, :] = 0
+        frame[:, :box['xmin']] = 0
+        frame[:, box['xmax']:] = 0
+        return frame
+
+    @staticmethod
     def wrap_result(pose, point, distance, angle):
         return _wrap_result((pose, point, distance, angle))
 
@@ -102,21 +111,16 @@ class PositionEstimator:
         return _unwrap_result(result)
     
     @staticmethod
-    def plot_result(frame, result, camera=None):
+    def plot_result(ax, frame, result, camera=None):
         pose, point, distance, angle = _unwrap_result(result)
-
-        fig, ax = plt.subplots()
-        ax.imshow(frame)
         if pose.pose_landmarks is not None:
             if camera is not None:
                 pixel_angle = camera.angle_to_pixel(angle)
                 ax.plot([pixel_angle, pixel_angle], [0, frame.shape[0]], color='c', linewidth=2)
-            ax.text(pixel_angle, 0, f'{angle:.1f} deg', color='k', fontsize=12)
-            ax.text(pixel_angle, 40, f'{distance} mm', color='k', fontsize=12)
-            ax.text(0, 0, f'x: {point.x}', color='k', fontsize=12)
-            ax.text(0, 40, f'y: {point.y}', color='k', fontsize=12)
-        plt.axis('off')
-        plt.show()
+            ax.text(pixel_angle, 0, f'{angle:.1f} deg', color='r', fontsize=12)
+            ax.text(pixel_angle, 40, f'{distance} mm', color='r', fontsize=12)
+            ax.text(0, 0, f'x: {point.x}', color='r', fontsize=12)
+            ax.text(0, 40, f'y: {point.y}', color='r', fontsize=12)
 
     def get_position(self, image, adjustment_ratio=1.0, verbose=False):
         pose_results = self.pose.process(image)
