@@ -21,10 +21,6 @@ def _transform(frame, box, size):
     # base crop of the person
     crop = frame[box['ymin']:box['ymax'], box['xmin']:box['xmax']]
 
-    # get vertical center of the crop
-    # width = crop.shape[1]
-    # crop = crop[:, width // 4 : width // 4 * 3]
-
     # line average
     r = cv2.resize(np.mean(crop[:, :, 0], axis=1), (1, size))
     g = cv2.resize(np.mean(crop[:, :, 1], axis=1), (1, size))
@@ -67,7 +63,8 @@ def rmse_hsl(truth, test):
     rmse_hue = math.sqrt(np.square(hue_difference(truth[0], test[0])).mean())
     rmse_saturation = normalized_rmse(truth[1], test[1])
     rmse_lightness = normalized_rmse(truth[2], test[2])
-    return rmse_hue + rmse_saturation + rmse_lightness
+    res = rmse_hue + rmse_saturation #+ rmse_lightness
+    return res / 100.0
 
 
 class ReID:
