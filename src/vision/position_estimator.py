@@ -46,11 +46,12 @@ def _wrap_result(result):
 
 class PositionEstimator:
 
-    def __init__(self, mp_pose, camera: Camera, obj_height, queue_size=3, kernel_size=3):
+    def __init__(self, mp_pose, camera: Camera, obj_height, file_path, queue_size=3, kernel_size=3):
         self.mp_pose = mp_pose
         self.pose = self.mp_pose.Pose(static_image_mode=False)
         self.camera = camera
         self.obj_height = obj_height
+        self.file_path = file_path
         self.distance_queue = queue.Queue(maxsize=queue_size)
         self.kernel_size = min(kernel_size, queue_size)
 
@@ -144,14 +145,31 @@ class PositionEstimator:
         point = point.round(10)
 
         return self.wrap_result(pose_results, point, distance, angle)
-
-    def save_position(self, image, file_path, adjustment_ratio=1.0, verbose=False):
-        result = self.get_position(image, adjustment_ratio, verbose)
-        if result is None: return None
-        pose, point, distance, angle = self.unwrap_result(result)
+    
+    def write_append(self, point, distance, angle):
         timestamp = round(time.time(), 3)
-        with open(file_path, 'a') as f:
+        with open(self.file_path, 'a') as f:
             f.write(f'{timestamp},{point.x},{point.y},{distance},{angle}\n')
-        return result
 
+    def write_overwrite(self, point, distance, angle):
+        timestamp = round(time.time(), 3)
+        with open(self.file_path, 'w') as f:
+            f.write(f'{timestamp},{point.x},{point.y},{distance},{angle}\n')
+    
+    def save_blank(self, append=False):
+        point, distance, angle = Point(-100, 0), 0, 0
+        if append: self.write_append(point, distance, angle)
+        else: self.write_overwrite(point, distance, angle)
+
+    def save_position(self, image, adjustment_ratio=1.0, append=False, verbose=False):
+        result = self.get_position(image, adjustment_ratio, verbose)
+        
+        point, distance, angle = Point(-100, 0), 0, 0
+        if result is not None: 
+            pose, point, distance, angle = self.unwrap_result(result)
+
+        if append: self.write_append(point, distance, angle)
+        else: self.write_overwrite(point, distance, angle)
+
+        return result
 
