@@ -143,9 +143,14 @@ class Vehicle:
         self.is_sharp_turn = True
         # turn half of the angle by going backward
 
-    #todo
-    def turn_on_itself(self, angle, speed):
-        pass
+    def start_self_turn(self, desired_angle, max_distance, speed):
+        self.desired_angle = desired_angle
+        self.max_distance = max_distance
+        self.set_speed(speed)
+        self.turn_base_point = self.center.copy()
+        self.turn_initial_angle = self.get_front().a
+        self.turn_time = max_distance / speed
+        self.turn_direction = 1 if desired_angle > 0 else -1
 
     def follow_target(self, target, host, time=1, has_seen=True, speed_ratio=0.25):
         self.lost_time = 0 if has_seen else self.lost_time + 1

@@ -7,6 +7,7 @@ import pandas as pd
 class FakeSensor:
     positions: pd.DataFrame
     to_recenter: bool
+    refresh_rate: int = 0.5
     tick: int = 0
 
     def capture(self, vehicle):
