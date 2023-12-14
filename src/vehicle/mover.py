@@ -1,5 +1,5 @@
 from .vehicle import Vehicle
-from src.vision import FakeSensor
+from src.sensor import FakeSensor
 from src.point import Point
 
 from scipy.interpolate import LSQUnivariateSpline

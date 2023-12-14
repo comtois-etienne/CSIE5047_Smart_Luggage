@@ -1,4 +1,4 @@
-from src.vision.camera import Camera
+from src.sensor import Camera
 
 import matplotlib.patches as patches
 import pandas as pd

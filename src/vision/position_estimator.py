@@ -1,5 +1,5 @@
 from src.point import Point
-from .camera import Camera
+from src.sensor import Camera
 import matplotlib.pyplot as plt
 import mediapipe as mp
 import numpy as np
