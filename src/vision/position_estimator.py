@@ -95,15 +95,6 @@ class PositionEstimator:
             )
 
     @staticmethod
-    def mask_frame(frame, box):
-        frame = frame.copy()
-        frame[:box['ymin'], :] = 0
-        frame[box['ymax']:, :] = 0
-        frame[:, :box['xmin']] = 0
-        frame[:, box['xmax']:] = 0
-        return frame
-
-    @staticmethod
     def wrap_result(pose, point, distance, angle):
         return _wrap_result((pose, point, distance, angle))
 
