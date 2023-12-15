@@ -1,5 +1,5 @@
 from .vehicle import Vehicle
-from src.sensor import FakeSensor
+from src.sensor import FakeSensor, Sensor
 from src.point import Point
 
 from scipy.interpolate import LSQUnivariateSpline
@@ -7,10 +7,6 @@ from dataclasses import dataclass
 import pandas as pd
 import numpy as np
 import time
-
-
-follow_distance = 1200
-sharp_distance = 800
 
 
 def get_spline(last_points):
@@ -68,13 +64,16 @@ def get_incoming(df_points, min_distance=300):
 class VehicleMover:
     # Parameters
     vehicle: Vehicle
-    sensor: FakeSensor
-    smoothing: int = 4
+    sensor: Sensor
+    file_path: str
+    frame_rate: int = 8
+    follow_distance: int = 1000
+    turn_distance: int = 600
 
     # Internal
-    tick: int = 0
-    capture_time: float = 0
-    has_seen: bool = False
+    _tick: int = 0
+    _frame_time: float = 0
+    _has_seen: bool = False
     seen: pd.DataFrame = pd.DataFrame(columns=['t', 'x', 'y'])
     actual_path: pd.DataFrame = pd.DataFrame(columns=['x', 'y'])
 
@@ -88,6 +87,10 @@ class VehicleMover:
             'x': 0, # x position
             'y': 0, # y position
         }, index=[len(self.actual_path)])])
+        self._frame_time = 1 / self.frame_rate
+
+    def frame_time(self):
+        return self._frame_time
 
     def recenter(self):
         front = self.vehicle.get_front()
@@ -102,10 +105,14 @@ class VehicleMover:
         self.sensor.recenter(self.vehicle)
         self.vehicle.recenter()
 
+    def write_overwrite(self, angle, speed):
+        with open(self.file_path, 'w') as f:
+            f.write(f'{format(angle, ".1f")},{speed}')
+
     def capture(self):
         new_seen = self.sensor.capture(self.vehicle)
-        self.has_seen = new_seen is not None
-        if self.has_seen:
+        self._has_seen = new_seen is not None
+        if self._has_seen:
             self.seen = pd.concat([self.seen, pd.DataFrame({
                 't': [self.sensor.time()],
                 'x': [new_seen.x],
@@ -118,25 +125,32 @@ class VehicleMover:
     
     def is_done(self):
         return self.sensor.is_done() and self.vehicle.has_stopped()
+    
+    def tick(self):
+        self._tick = (self._tick + 1) % self.frame_rate
+
+    def can_move_vehicule(self):
+        return self.vehicle.can_move(self.get_last_seen(1).iloc[-1], self.follow_distance , self.turn_distance)
 
     def step(self):
-        time_smoothing = 1 / self.smoothing
-
-        if self.tick == 0:
-            t_a = time.time()
-            self.capture()
-            self.capture_time = time.time() - t_a
-            print(f'Capture time: {self.capture_time}')
+        if self._tick == 0: self.capture()
         
         last_points = self.get_last_seen(25)
         last_seen = Point.from_df(last_points.iloc[-1])
         incoming, passed = get_incoming(get_spline_df(last_points))
-        target = get_target(incoming, last_seen)
+        target = get_target(incoming, last_seen) + Point(self.vehicle.axle_len * 3, 0, 0)
+        can_move = self.can_move_vehicule()
 
-        self.vehicle.follow_target(target, last_seen, time_smoothing, self.has_seen)
+        if not can_move:
+            a, s = self.vehicle.move(self._frame_time, 0)
+            self.write_overwrite(a, s)
+        else:
+            a, s = self.vehicle.move_to(target, self._frame_time)
+            self.write_overwrite(a, s)
+        
+        # self.vehicle.follow_target(target, last_seen, self._frame_time, self._has_seen)
         self.recenter()
-
-        self.tick = (self.tick + 1) % self.smoothing
+        self.tick()
 
         return incoming, passed, last_seen, target
 

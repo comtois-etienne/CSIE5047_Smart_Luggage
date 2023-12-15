@@ -24,7 +24,6 @@ class Sensor:
     def read_csv(self):
         point_df = pd.read_csv(self.file_path, header=None)
         point_df.columns = COLUMNS
-        print(point_df)
         if point_df.iloc[-1]['x'] == -100 and point_df.iloc[-1]['y'] == 0:
             self.has_seen = False
         else:

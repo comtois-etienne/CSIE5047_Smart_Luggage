@@ -154,7 +154,7 @@ class PositionEstimator:
     def write_overwrite(self, point, distance, angle):
         timestamp = round(time.time(), 3)
         with open(self.file_path, 'w') as f:
-            f.write(f'{timestamp},{point.x},{point.y},{distance},{angle}\n')
+            f.write(f'{timestamp},{point.x},{point.y},{distance},{angle}')
     
     def save_blank(self, append=False):
         point, distance, angle = Point(-100, 0), 0, 0
