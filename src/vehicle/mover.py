@@ -135,7 +135,7 @@ class VehicleMover:
     def step(self):
         if self._tick == 0: self.capture()
         
-        last_points = self.get_last_seen(25)
+        last_points = self.get_last_seen(20)
         last_seen = Point.from_df(last_points.iloc[-1])
         incoming, passed = get_incoming(get_spline_df(last_points))
         target = get_target(incoming, last_seen) + Point(self.vehicle.axle_len * 3, 0, 0)
