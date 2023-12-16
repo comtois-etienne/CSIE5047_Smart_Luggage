@@ -66,7 +66,7 @@ if zed.get_sensors_data(sensors_data, sl.TIME_REFERENCE.CURRENT) == sl.ERROR_COD
     initial_yaw_angle += 180
     previous_yaw_angle = initial_yaw_angle
 p = 0
-while time.time() - time_0 < 5:
+while 1:
     if zed.get_sensors_data(sensors_data, sl.TIME_REFERENCE.CURRENT) == sl.ERROR_CODE.SUCCESS:
         if ts_handler.is_new(sensors_data.get_imu_data()):
             
@@ -99,13 +99,3 @@ plt.ylabel("Yaw Angle (degrees)")
 plt.title("Yaw Angle Over Time with Low-Pass Filtering")
 plt.legend()
 plt.show()
-
-#  if abs(p - yaw_angle) > 180:
-#                 if yaw_angle > 0:
-#                     yaw_angle = yaw_angle - 360
-#                     filtered_yaw_angle = filtered_yaw_angle - 360
-#                     p = yaw_angle
-#                 else:
-#                     yaw_angle = yaw_angle + 360
-#                     filtered_yaw_angle = filtered_yaw_angle + 360
-#                     p = yaw_angle
