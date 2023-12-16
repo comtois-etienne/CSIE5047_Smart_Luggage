@@ -21,6 +21,7 @@ class Vehicle:
         self.speed = 0
         self.wheel_angle = 0  # Radians
         self.north_angle = 0  # Radians
+        self.relative_angle = 0  # Radians
         self.fov = camera.h_fov
 
         self.last_movement = Point(0, 0, 0)
@@ -79,6 +80,7 @@ class Vehicle:
                           self.center.y - half_axle_length * math.sin(self.north_angle))
 
     def recenter(self):
+        self.relative_angle = (self.relative_angle - self.north_angle) % (2 * np.pi)
         self.north_angle = 0
         self.center = Point(- self.axle_len / 2, 0, 0)
         self.update_axle_positions()
