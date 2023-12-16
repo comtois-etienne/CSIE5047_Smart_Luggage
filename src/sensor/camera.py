@@ -9,6 +9,7 @@ class Camera:
     d_fov: float = 0.0 # Diagonal field of view
     h_res: int = 0 # Horizontal resolution
     v_res: int = 0 # Vertical resolution
+    is_rgbd: bool = False # Is RGBD camera
 
     def pixel_to_angle(self, pixel_x):
         return (pixel_x - self.h_res / 2) * self.h_fov / self.h_res

@@ -28,6 +28,7 @@ zed_two_camera = Camera(
     v_fov=70.0,
     v_res=720,
     h_res=2560//2,
+    is_rgbd=True,
 )
 
 __all__ = [
