@@ -26,6 +26,8 @@ yt_video_camera = Camera(
 zed_two_camera = Camera(
     h_fov=110.0,
     v_fov=70.0,
+    v_res=720,
+    h_res=2560//2,
 )
 
 __all__ = [
