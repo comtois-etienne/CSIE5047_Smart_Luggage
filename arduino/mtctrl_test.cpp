@@ -18,36 +18,32 @@ const int offsetB = 1;
 Motor motor2 = Motor(BIN1, BIN2, PWMB, offsetB, STBY);
 
 void setup() {
- // emty
+  pinMode(BIN1, OUTPUT);
+  pinMode(BIN1, OUTPUT);
+  pinMode(PWMB, OUTPUT);
 }
 
 //drive(speed,time)
 //stanby() til any command
 //forward
 
-void goForward() {
-
-}
+//void goForward() {
+//}
 void loop() {
    motor2.drive(255,1000);   //1sec
    motor2.drive(-255,1000);  //1sec
    motor2.brake();           
    delay(1000);
    
-   forward(motor1, motor2, 150);  
+   forward(motor2, 150);  
    delay(1000);				       
    
-   back(motor1, motor2, -150); 
+   back(motor2, -150); 
    delay(1000);
    
-   brake(motor1, motor2);    
+   brake(motor2);    
    delay(1000);
-   
-   left(motor1, motor2, 100);   
-   delay(1000);
-   right(motor1, motor2, 100); 
-   delay(1000);
-   
-   brake(motor1, motor2);  
+
+   brake(motor2);  
    delay(1000);   
 }
