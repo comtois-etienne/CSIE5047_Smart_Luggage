@@ -48,7 +48,7 @@ class PositionEstimator:
 
     def __init__(self, mp_pose, camera: Camera, obj_height, file_path, queue_size=3, kernel_size=3):
         self.mp_pose = mp_pose
-        self.pose = self.mp_pose.Pose(static_image_mode=False)
+        self.pose = self.mp_pose.Pose(static_image_mode=False) if self.mp_pose is not None else None
         self.camera = camera
         self.obj_height = obj_height
         self.file_path = file_path
