@@ -1,5 +1,4 @@
 from .position_estimator import PositionEstimator
-from .position_estimator import reset_pe_file
 from .video_capture import VideoCapture
 from .object_detector import coco_classes
 from .object_detector import ObjectDetector
