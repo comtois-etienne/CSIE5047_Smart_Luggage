@@ -32,10 +32,12 @@ class VideoCapture:
             if self.cap is not None:
                 self.cap.grab()
 
-    def grab_frame(self):
+    def grab_frame(self, left_half: False):
         if self.cap is None:
             return None
         ret, frame = self.cap.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) if ret else None
+        shape = frame.shape
+        frame = frame[:, :shape[1]//2, :] if left_half and frame is not None else frame
         return frame
 
