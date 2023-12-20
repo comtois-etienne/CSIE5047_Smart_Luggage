@@ -1,0 +1,210 @@
+@startuml
+
+class Point {
+    + x : int
+    + y : int 
+    + a : float
+    --
+    + distance()
+    + angle()
+    + rotate()
+    + is_visible()
+}
+
+class Camera {
+    + h_fov : float
+    + v_fov : float
+    + d_fov : float
+    + h_res : int
+    + v_res : int
+    --
+    + is_rgbd : bool
+    + pixel_to_angle()
+    + angle_to_pixel()
+    + get_distance_angle()
+    + distance_angle_to_coordinates()
+}
+
+class FakeSensor {
+    + positions : DataFrame
+    + to_recenter: bool
+    + refresh_rate: int
+    + tick : int
+    --
+    + capture()
+    + recenter()
+    + time()
+    + index()
+    + reset()
+    + is_done()
+    + get_host_position()
+}
+
+class Sensor {
+    + file_path : str
+    + refresh_rate : int
+    + tick : int
+    + has_seen : bool
+    + positions : DataFrame
+    --
+    + read_csv()
+    + capture()
+    + recenter()
+}
+
+class VehicleMover {
+    + vehicle : Vehicle
+    + sensor : Sensor
+    + file_path : str
+    + frame_rate: int
+    + follow_distance: int
+    + turn_distance: int
+    + seen : DataFrame
+    --
+    + recenter()
+    + write_overwrite()
+    + capture()
+    + get_last_seen()
+    + can_move_vehicule()
+    + step()
+}
+
+class Vehicle {
+    + max_turn_angle : float
+    + axle_len : int
+    + max_speed : int
+    + speed : int
+    + wheel_angle : float
+    + north_angle : float
+    + relative_angle : float
+    + fov : float
+    + last_movement : Point
+    + center : Point
+    + rear : Point
+    + front : Point
+    --
+    + angle_to_point()
+    + vehicle_angle()
+    + distance_to_point()
+    + sees()
+    + update_axle_positions()
+    + recenter()
+    + rotate_point_around_pivot()
+    + update_position()
+    + move()
+    + move_to()
+    + can_move()
+}
+
+class ObjectDetector {
+    + model : YoloModel
+    + camera : Camera
+    + results : DataFrame
+    --
+    + detect()
+    + get_objects()
+    + get_objects_by_name()
+    + get_objs_by_class()
+}
+
+class PositionEstimator {
+    + mp_pose : mp_pose
+    + pose : Pose
+    + camera : Camera
+    + obj_height : int
+    + file_path : str
+    + distance_queue : Queue
+    + kernel_size : int
+    --
+    - add_distance()
+    - get_median_distance()
+    - get_mean_distance()
+    - get_kernel_distance()
+    - get_distance()
+    + get_position()
+    + save_position()
+}
+
+class ReID {
+    + truth : NdArray
+    + frame : NdArray
+    + box : DataFrame
+    + size : int
+    + threshold : float
+    --
+    - to_hsl()
+    - transform()
+    - rmse()
+    - set_truth()
+    + reid_score()
+    + reid()
+}
+
+class VideoCapture {
+    + path : str
+    + cap : cv2VideoCapture
+    --
+    + release()
+    + take()
+    + isOpened()
+    + skip_frames()
+    + grab_frame()
+}
+
+class MainPositionEstimator #APPLICATION {
+    + refresh_rate : int
+    + camera : Camera
+    + yolo_model : YoloModel
+    + obj_detector : ObjectDetector
+    + pe : PositionEstimator
+    + reid : ReID
+    --
+    + loop()
+}
+
+class MainMovementDecider #APPLICATION {
+    + sensor : Sensor
+    + vehicle : Vehicle
+    + vehicle_mover : VehicleMover
+    --
+    + loop()
+}
+
+class MainVehicleCommunication #APPLICATION {
+    + frame_rate : int
+    + file_path : str
+    + ser_port : str
+    + ser_baudrate : int
+    --
+    + send_commands()
+    + loop()
+
+}
+
+MainPositionEstimator -- VideoCapture
+MainPositionEstimator -- YoloModel
+MainPositionEstimator -- PositionEstimator
+MainPositionEstimator -- Camera
+MainPositionEstimator -- ObjectDetector
+MainPositionEstimator -- ReID
+
+MainMovementDecider -- Sensor
+MainMovementDecider -- Vehicle
+MainMovementDecider -- VehicleMover
+
+
+Vehicle -- Point
+Vehicle -- Camera
+VehicleMover -- Vehicle
+VehicleMover -- Sensor
+
+PositionEstimator -- Camera
+PositionEstimator -- Pose
+
+ObjectDetector -- YoloModel
+
+Sensor <|-- FakeSensor
+
+MainPositionEstimator -[hidden] MainMovementDecider
+
+@enduml
