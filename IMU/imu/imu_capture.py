@@ -13,6 +13,7 @@ class IMUCapture:
 
         self.prev_filtered_yaw_angle = None
         self.prev_yaw_angle = None
+        self._has_cap = False
 
         self.ts_handler = ts_handler
         self.zed = zed_camera
@@ -21,7 +22,7 @@ class IMUCapture:
         self.time_0 = time.time()
 
     def _has_captured(self):
-        return self.prev_yaw_angle is not None and self.prev_filtered_yaw_angle is not None
+        return self._has_cap
     
     @staticmethod
     def _quaternion_rotation_matrix(Q):
@@ -61,6 +62,7 @@ class IMUCapture:
         rotation_matrix = self._quaternion_rotation_matrix(quaternion)
         self.prev_filtered_yaw_angle = self._get_yaw_angle(rotation_matrix) + 180
         self.prev_yaw_angle = 0.0
+        self._has_cap = True
 
     def _capture(self):
         quaternion = self.zed.get_quaternion()
