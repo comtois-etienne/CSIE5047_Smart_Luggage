@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import pyzed.sl as sl
+import time
 
-from imu import IMUCapture, TimestampHandler, ZedCamera
+from .imu import IMUCapture, TimestampHandler, ZedCamera
 
 
 ts_handler = TimestampHandler()
@@ -15,6 +16,7 @@ while True:
     yaw_angle, filtered_yaw_angle = imu_cap.capture()
     if yaw_angle is not None and filtered_yaw_angle is not None:
         print("Raw Yaw Angle: {:.2f} degrees, Filtered Yaw Angle: {:.2f} degrees".format(yaw_angle, filtered_yaw_angle))
+    time.sleep(0.1)
 zed_camera.close()
 
 plt.plot(imu_cap.timestamps, imu_cap.yaw_angles, label="Raw Yaw Angle")

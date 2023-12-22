@@ -80,7 +80,7 @@ class IMUCapture:
     def capture(self):
         if not self._has_captured() and self.zed.get_sensors_data():
             self._firts_capture()
-        elif self.ts_handler.is_new(self.zed.get_imu_data()):
+        elif self.zed.get_sensors_data():
             yaw_angle, filtered_yaw_angle = self._capture()
             self.prev_filtered_yaw_angle = filtered_yaw_angle
             self.prev_yaw_angle = yaw_angle
