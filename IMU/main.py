@@ -1,9 +1,7 @@
 import matplotlib.pyplot as plt
 import pyzed.sl as sl
 
-from .timestamp_handler import TimestampHandler
-from .zed_camera import ZedCamera
-from .imu_capture import IMUCapture
+from imu import IMUCapture, TimestampHandler, ZedCamera
 
 
 ts_handler = TimestampHandler()
