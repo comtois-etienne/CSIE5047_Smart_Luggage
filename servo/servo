@@ -1,0 +1,56 @@
+#include <Servo.h>
+#include <SCoop.h>
+#include <PID_v1.h>
+const int bin1Pin = A4;
+const int bin2Pin = A5;
+const int pwmPin = 10;
+const int v_in = A0;
+const int a_in = A1;
+Servo myservo; 
+
+
+double v_Setpoint, v_Input, v_Output;
+double v_Kp=3.16, v_Ki=0.15,v_Kd=0.01;
+PID myPID1(&v_Input, &v_Output, &v_Setpoint, v_Kp, v_Ki, v_Kd, DIRECT);
+
+double a_Setpoint, a_Input, a_Output;
+double a_Kp=2.05, a_Ki=0.11,a_Kd=0.01;
+PID myPID2(&a_Input, &a_Output, &a_Setpoint, a_Kp, a_Ki, a_Kd, DIRECT);
+
+
+void setup() {
+  pinMode(bin1Pin, OUTPUT);
+  pinMode(bin2Pin, OUTPUT);
+  pinMode(pwmPin, OUTPUT);
+  pinMode(v_in, INPUT);
+  pinMode(a_in, INPUT);
+  myPID1.SetMode(AUTOMATIC);
+  myPID2.SetMode(AUTOMATIC);
+  myservo.attach(7);
+  mySCoop.start();
+}
+
+defineTaskLoop(TaskOne);
+defineTaskLoop(TaskTwo);
+
+void TaskOne::loop(){
+  v_Input = digitalRead(v_in);
+  myPID1.Compute();
+  analogWrite(bin1Pin, 0);
+  analogWrite(bin2Pin, 255);
+  digitalWrite(pwmPin, 1);
+  delay(1000 + 10*v_Output);
+  analogWrite(bin1Pin, 0);
+  analogWrite(bin2Pin, 255);
+  digitalWrite(pwmPin, 0);
+  delay(1000 - 10*v_Output);
+}
+void TaskTwo::loop(){
+  a_Input = digitalRead(a_in);
+  myPID2.Compute();
+  myservo.write(a_Output);
+}
+
+void loop() {
+  yield();
+}
