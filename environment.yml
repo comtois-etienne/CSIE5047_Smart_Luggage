@@ -7,7 +7,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.10
-  - tensorflow
+  # - tensorflow
   - scikit-image
   - scikit-learn
   - pandas
